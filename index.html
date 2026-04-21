@@ -16,7 +16,7 @@
   <meta name="twitter:card" content="summary" />
   <meta name="twitter:creator" content="@YossiBenHagai" />
 
-  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'&gt;&lt;rect width='32' height='32' rx='6' fill='%230a0e12'/&gt;&lt;text x='16' y='22' font-family='ui-monospace,Menlo,Consolas,monospace' font-size='18' font-weight='700' fill='%235cd2a3' text-anchor='middle'&gt;y&lt;/text&gt;&lt;/svg&gt;" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
   <style>
     :root {
@@ -38,6 +38,23 @@
       font-family: var(--sans); font-size: 15px; line-height: 1.55;
       -webkit-font-smoothing: antialiased;
     }
+
+    /* Subtle CRT scanlines overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1000;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.022) 0 1px,
+        transparent 1px 3px
+      );
+    }
+    @media (prefers-reduced-motion: reduce) {
+      body::before { display: none; }
+    }
     a { color: var(--accent); text-decoration: none; }
     a:hover { text-decoration: underline; }
     code, .mono { font-family: var(--mono); }
@@ -54,6 +71,39 @@
     .about-hero .prompt .p-host { color: var(--accent); }
     .about-hero .prompt .p-path { color: var(--low); }
     .about-hero .prompt .typed { color: var(--fg); }
+
+    /* Typed animation on the whoami prompt. 'whoami --summary' = 16 chars. */
+    .about-hero .prompt .typed {
+      display: inline-block;
+      overflow: hidden;
+      white-space: nowrap;
+      vertical-align: bottom;
+      width: 0;
+      animation: typing 1.2s steps(16, end) 200ms forwards;
+    }
+    .about-hero .prompt .caret {
+      display: inline-block;
+      color: var(--accent);
+      animation: caret-blink 0.9s step-end infinite;
+      margin-left: 1px;
+    }
+    @keyframes typing { to { width: 16ch; } }
+    @keyframes caret-blink { 50% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) {
+      .about-hero .prompt .typed { animation: none; width: auto; }
+      .about-hero .prompt .caret { animation: none; opacity: 0.9; }
+    }
+
+    /* Second prompt line + stats output, after the pills. */
+    .stats-prompt { margin-top: 20px !important; }
+    .stats-output {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--fg);
+      margin: 4px 0 0;
+      padding: 0;
+    }
+    .stats-output .dot { color: var(--accent); margin: 0 6px; }
     .about-h1 { font-size: 38px; line-height: 1.1; margin: 0 0 12px; letter-spacing: -0.015em; }
     .about-lede { font-size: 17px; color: var(--fg-dim); max-width: 760px; margin: 0 0 18px; }
     .about-lede strong { color: var(--fg); font-weight: 600; }
@@ -178,7 +228,7 @@
   <main class="container">
     <section class="about-hero">
       <div class="prompt mono">
-        <span class="p-host">yossi@home</span>:<span class="p-path">~</span>$ <span class="typed">whoami --summary</span>
+        <span class="p-host">yossi@home</span>:<span class="p-path">~</span>$ <span class="typed">whoami --summary</span><span class="caret" aria-hidden="true">▌</span>
       </div>
 
       <h1 class="about-h1">Yossi Ben Hagai</h1>
@@ -196,6 +246,13 @@
         <span class="pill">llmops · rag · mcp</span>
         <span class="pill">4 patents</span>
         <span class="pill">ciso</span>
+      </div>
+
+      <div class="prompt mono stats-prompt">
+        <span class="p-host">yossi@home</span>:<span class="p-path">~</span>$ cat highlights.md
+      </div>
+      <div class="stats-output mono">
+        4 patents<span class="dot">·</span>2 companies co-founded<span class="dot">·</span>still shipping
       </div>
     </section>
 
