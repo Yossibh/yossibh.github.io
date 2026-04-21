@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="Yossi Ben Hagai">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0%" stop-color="#132029" />
+      <stop offset="100%" stop-color="#0a0e12" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <!-- prompt header -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">
+    <text x="100" y="170" font-size="32" fill="#8a99a8">$ whoami --summary</text>
+    <text x="100" y="290" font-size="80" font-weight="700" fill="#d7e1ea">Yossi Ben Hagai</text>
+    <text x="100" y="360" font-size="34" fill="#5cd2a3">Senior SRE · Platform · Security &amp; Networking · Applied AI</text>
+    <text x="100" y="430" font-size="24" fill="#8a99a8">Microsoft Sentinel · Tel Aviv</text>
+    <!-- stats -->
+    <text x="100" y="540" font-size="22" fill="#2f8b6d">$ cat highlights.md</text>
+    <text x="100" y="580" font-size="24" fill="#d7e1ea">4 patents · 2 companies co-founded · still shipping</text>
+  </g>
+  <!-- accent bracket -->
+  <g stroke="#5cd2a3" stroke-width="3" fill="none">
+    <path d="M60 120 L60 480" />
+    <path d="M60 120 L100 120" />
+    <path d="M60 480 L100 480" />
+  </g>
+</svg>
