@@ -138,20 +138,54 @@
       background:
         radial-gradient(ellipse at center, rgba(92,210,163,0.08), transparent 60%),
         var(--bg-elev);
+      perspective: 1200px;
     }
     .q-card {
-      display: flex; flex-direction: column; gap: 8px;
+      position: relative;
+      min-height: 150px;
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: default;
+    }
+    .q-card:hover { transform: rotateY(180deg); }
+    .q-face {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
       padding: 16px 18px;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 6px;
-      min-height: 130px;
-      transition: border-color .12s ease, transform .12s ease;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transition: border-color .12s ease;
     }
-    .q-card:hover { border-color: var(--accent-dim); transform: translateY(-1px); }
+    .q-card:hover .q-face { border-color: var(--accent-dim); }
+    .q-face-back {
+      transform: rotateY(180deg);
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--fg-dim);
+      line-height: 1.45;
+      gap: 4px;
+      overflow: hidden;
+    }
+    .q-face-back .q-back-cmd { color: var(--accent); margin-bottom: 4px; }
+    .q-face-back .q-back-k { color: var(--accent); display: inline-block; min-width: 58px; }
+    .q-face-back ul { list-style: none; padding: 0; margin: 0; }
+    .q-face-back ul li { padding-left: 10px; position: relative; color: var(--fg); }
+    .q-face-back ul li::before { content: "-"; position: absolute; left: 0; color: var(--accent-dim); }
     .q-tag { font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
     .q-card strong { font-size: 15px; color: var(--fg); font-weight: 600; line-height: 1.35; }
     .q-meta { font-size: 11px; color: var(--fg-dim); margin-top: auto; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .q-card, .q-face { transition: none; }
+      .q-card:hover { transform: none; }
+      .q-face-back { display: none; }
+    }
 
     .q-edge {
       position: absolute;
@@ -183,7 +217,11 @@
     }
 
     @media (max-width: 720px) {
-      .quadrant { grid-template-columns: 1fr; grid-template-rows: auto; padding: 20px 14px; }
+      .quadrant { grid-template-columns: 1fr; grid-template-rows: auto; padding: 20px 14px; perspective: none; }
+      .q-card { min-height: 0; transform-style: flat; }
+      .q-card:hover { transform: none; }
+      .q-face-back { display: none; }
+      .q-face { position: static; inset: auto; }
       .q-edge-left, .q-edge-right { display: none; }
       .q-edge-top, .q-edge-bottom { position: static; transform: none; display: inline-block; margin: 6px 4px; }
       .q-center { position: static; transform: none; display: inline-block; margin: 10px 0; }
@@ -263,26 +301,78 @@
         and increasingly, in the middle.
       </p>
 
-      <div class="quadrant" role="img" aria-label="Quadrant showing the four disciplines and their intersections">
+      <div class="quadrant" role="img" aria-label="Quadrant showing the four disciplines and their intersections. Hover each card for a man-page.">
         <div class="q-card q-sre">
-          <span class="q-tag mono">01 · sre / platform</span>
-          <strong>Keep it up. Make it cheap. Tell the story.</strong>
-          <span class="q-meta mono">SLOs · data-engineering · K8s · ADO · FinOps · Azure</span>
+          <div class="q-face q-face-front">
+            <span class="q-tag mono">01 · sre / platform</span>
+            <strong>Keep it up. Make it cheap. Tell the story.</strong>
+            <span class="q-meta mono">SLOs · data-engineering · K8s · ADO · FinOps · Azure</span>
+          </div>
+          <div class="q-face q-face-back" aria-hidden="true">
+            <span class="q-back-cmd">$ man sre</span>
+            <div><span class="q-back-k">NAME</span> keep it up, make it cheap, tell the story</div>
+            <div><span class="q-back-k">DOES</span></div>
+            <ul>
+              <li>SLOs over heroics</li>
+              <li>automate the boring; escalate the novel</li>
+              <li>observability before optimization</li>
+            </ul>
+            <div><span class="q-back-k">SEE ALSO</span> platform(1), toil(5), oncall(8)</div>
+          </div>
         </div>
         <div class="q-card q-ai">
-          <span class="q-tag mono">02 · applied AI</span>
-          <strong>LLMs with guardrails, evals, and a job to do.</strong>
-          <span class="q-meta mono">RAG · Agents · MCP · evals · AIOps</span>
+          <div class="q-face q-face-front">
+            <span class="q-tag mono">02 · applied AI</span>
+            <strong>LLMs with guardrails, evals, and a job to do.</strong>
+            <span class="q-meta mono">RAG · Agents · MCP · evals · AIOps</span>
+          </div>
+          <div class="q-face q-face-back" aria-hidden="true">
+            <span class="q-back-cmd">$ man applied-ai</span>
+            <div><span class="q-back-k">NAME</span> LLMs with a job to do</div>
+            <div><span class="q-back-k">DOES</span></div>
+            <ul>
+              <li>evals before vibes</li>
+              <li>retrieval before fine-tuning</li>
+              <li>guardrails at the tool boundary</li>
+            </ul>
+            <div><span class="q-back-k">SEE ALSO</span> mcp(1), agents(5), evals(7)</div>
+          </div>
         </div>
         <div class="q-card q-swe">
-          <span class="q-tag mono">03 · software</span>
-          <strong>Cloud-native, IaC-first, supply-chain-aware.</strong>
-          <span class="q-meta mono">C# · Python · Go · IaC · containers · SDLC</span>
+          <div class="q-face q-face-front">
+            <span class="q-tag mono">03 · software</span>
+            <strong>Cloud-native, IaC-first, supply-chain-aware.</strong>
+            <span class="q-meta mono">C# · Python · Go · IaC · containers · SDLC</span>
+          </div>
+          <div class="q-face q-face-back" aria-hidden="true">
+            <span class="q-back-cmd">$ man software</span>
+            <div><span class="q-back-k">NAME</span> ship, iterate, own it</div>
+            <div><span class="q-back-k">DOES</span></div>
+            <ul>
+              <li>types and tests over docs</li>
+              <li>simple beats clever</li>
+              <li>own your own reliability</li>
+            </ul>
+            <div><span class="q-back-k">SEE ALSO</span> iac(1), ci(5), sdlc(7)</div>
+          </div>
         </div>
         <div class="q-card q-sec">
-          <span class="q-tag mono">04 · security &amp; networking</span>
-          <strong>Zero trust. Real handshakes. Hard guarantees.</strong>
-          <span class="q-meta mono">Zero Trust · Entra · PKI · PenTesting · cross-domain</span>
+          <div class="q-face q-face-front">
+            <span class="q-tag mono">04 · security &amp; networking</span>
+            <strong>Zero trust. Real handshakes. Hard guarantees.</strong>
+            <span class="q-meta mono">Zero Trust · Entra · PKI · PenTesting · cross-domain</span>
+          </div>
+          <div class="q-face q-face-back" aria-hidden="true">
+            <span class="q-back-cmd">$ man security</span>
+            <div><span class="q-back-k">NAME</span> zero trust, real handshakes</div>
+            <div><span class="q-back-k">DOES</span></div>
+            <ul>
+              <li>assume breach, verify always</li>
+              <li>identity is the new perimeter</li>
+              <li>crypto protects; design enables</li>
+            </ul>
+            <div><span class="q-back-k">SEE ALSO</span> entra(1), zero-trust(5), pki(7)</div>
+          </div>
         </div>
 
         <span class="q-edge q-edge-top mono" aria-hidden="true">AIOps · LLMOps</span>
