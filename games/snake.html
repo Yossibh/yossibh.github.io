@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snake · Games</title>
+  <meta name="description" content="Classic Snake game in your browser." />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/games/games.css" />
+</head>
+<body>
+  <main class="wrap">
+    <p class="crumbs"><a href="/">/</a> / <a href="/games/">games</a> / snake</p>
+    <div class="game-head">
+      <h1><span class="accent">Snake</span></h1>
+      <div class="score mono">length <strong id="score">3</strong> · best <strong id="best">0</strong></div>
+    </div>
+    <p class="controls">
+      <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> / swipe — move</span>
+      <span><kbd>P</kbd> — pause</span>
+      <span><kbd>R</kbd> — restart</span>
+    </p>
+    <canvas id="game" width="480" height="480" aria-label="Snake game canvas"></canvas>
+  </main>
+
+<script>
+(function () {
+  var canvas = document.getElementById('game');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var GRID = 24;
+  var COLS = W / GRID, ROWS = H / GRID;
+
+  var state = {
+    snake: [{ x: 8, y: 12 }, { x: 7, y: 12 }, { x: 6, y: 12 }],
+    dir: { x: 1, y: 0 },
+    nextDir: { x: 1, y: 0 },
+    food: { x: 15, y: 12 },
+    tick: 0,
+    speed: 8, // ticks per move (lower = faster)
+    moveClock: 0,
+    over: false,
+    paused: false,
+    best: parseInt(localStorage.getItem('snake-best') || '0', 10),
+  };
+  document.getElementById('best').textContent = state.best;
+
+  function placeFood() {
+    while (true) {
+      var f = { x: (Math.random() * COLS) | 0, y: (Math.random() * ROWS) | 0 };
+      if (!state.snake.some(function (s) { return s.x === f.x && s.y === f.y; })) {
+        state.food = f; return;
+      }
+    }
+  }
+
+  function reset() {
+    state.snake = [{ x: 8, y: 12 }, { x: 7, y: 12 }, { x: 6, y: 12 }];
+    state.dir = { x: 1, y: 0 };
+    state.nextDir = { x: 1, y: 0 };
+    state.over = false; state.paused = false; state.speed = 8; state.moveClock = 0;
+    placeFood();
+  }
+
+  function tryTurn(dx, dy) {
+    // prevent 180° reversal on the same tick
+    if (dx === -state.dir.x && dy === -state.dir.y) return;
+    state.nextDir = { x: dx, y: dy };
+  }
+
+  window.addEventListener('keydown', function (e) {
+    if (e.code === 'ArrowUp') { e.preventDefault(); tryTurn(0, -1); }
+    else if (e.code === 'ArrowDown') { e.preventDefault(); tryTurn(0, 1); }
+    else if (e.code === 'ArrowLeft') { e.preventDefault(); tryTurn(-1, 0); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); tryTurn(1, 0); }
+    else if (e.key === 'p' || e.key === 'P') { state.paused = !state.paused; }
+    else if (e.key === 'r' || e.key === 'R') { reset(); }
+  });
+
+  var touch = null;
+  canvas.addEventListener('touchstart', function (e) { touch = e.touches[0]; }, { passive: true });
+  canvas.addEventListener('touchmove', function (e) {
+    if (!touch) return;
+    var t = e.touches[0];
+    var dx = t.clientX - touch.clientX, dy = t.clientY - touch.clientY;
+    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+    if (Math.abs(dx) > Math.abs(dy)) tryTurn(dx > 0 ? 1 : -1, 0);
+    else tryTurn(0, dy > 0 ? 1 : -1);
+    touch = t;
+  }, { passive: true });
+
+  function step() {
+    if (state.paused || state.over) return;
+    state.moveClock++;
+    if (state.moveClock < state.speed) return;
+    state.moveClock = 0;
+    state.dir = state.nextDir;
+    var head = state.snake[0];
+    var nh = { x: head.x + state.dir.x, y: head.y + state.dir.y };
+    if (nh.x < 0 || nh.x >= COLS || nh.y < 0 || nh.y >= ROWS) { gameOver(); return; }
+    if (state.snake.some(function (s) { return s.x === nh.x && s.y === nh.y; })) { gameOver(); return; }
+    state.snake.unshift(nh);
+    if (nh.x === state.food.x && nh.y === state.food.y) {
+      placeFood();
+      if (state.speed > 3) state.speed = Math.max(3, state.speed - 0.2);
+    } else {
+      state.snake.pop();
+    }
+  }
+
+  function gameOver() {
+    state.over = true;
+    var len = state.snake.length;
+    if (len > state.best) { state.best = len; localStorage.setItem('snake-best', String(len)); }
+  }
+
+  function render() {
+    ctx.fillStyle = '#0a0e12';
+    ctx.fillRect(0, 0, W, H);
+    // Grid
+    ctx.strokeStyle = '#111820';
+    for (var x = 0; x <= COLS; x++) { ctx.beginPath(); ctx.moveTo(x * GRID + 0.5, 0); ctx.lineTo(x * GRID + 0.5, H); ctx.stroke(); }
+    for (var y = 0; y <= ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * GRID + 0.5); ctx.lineTo(W, y * GRID + 0.5); ctx.stroke(); }
+    // Food
+    ctx.fillStyle = '#ffaa3c';
+    ctx.fillRect(state.food.x * GRID + 4, state.food.y * GRID + 4, GRID - 8, GRID - 8);
+    // Snake
+    state.snake.forEach(function (s, i) {
+      ctx.fillStyle = i === 0 ? '#5cd2a3' : '#2f8b6d';
+      ctx.fillRect(s.x * GRID + 2, s.y * GRID + 2, GRID - 4, GRID - 4);
+    });
+    if (state.paused) bigText('paused');
+    if (state.over)   bigText('game over — R to restart', '#ff7878');
+    document.getElementById('score').textContent = state.snake.length;
+    document.getElementById('best').textContent = state.best;
+  }
+
+  function bigText(t, color) {
+    ctx.fillStyle = 'rgba(10,14,18,0.7)';
+    ctx.fillRect(0, H / 2 - 26, W, 52);
+    ctx.fillStyle = color || '#d7e1ea';
+    ctx.textAlign = 'center';
+    ctx.font = '700 18px ui-monospace, Menlo, Consolas, monospace';
+    ctx.fillText(t, W / 2, H / 2 + 6);
+  }
+
+  placeFood();
+  function loop() { step(); render(); requestAnimationFrame(loop); }
+  loop();
+})();
+</script>
+</body>
+</html>

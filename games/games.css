@@ -1,0 +1,97 @@
+/* Shared styles for /games/ — matches the dark/hacker palette of the root site. */
+:root {
+  --bg: #0a0e12;
+  --bg-elev: #111820;
+  --border: #1f2a36;
+  --fg: #d7e1ea;
+  --fg-dim: #8a99a8;
+  --accent: #5cd2a3;
+  --accent-dim: #2f8b6d;
+  --warn: #ffaa3c;
+  --err: #ff7878;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg); color: var(--fg);
+  font-family: var(--sans); font-size: 15px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body::before {
+  content: "";
+  position: fixed; inset: 0;
+  pointer-events: none; z-index: 1000;
+  background: repeating-linear-gradient(to bottom, rgba(255,255,255,0.022) 0 1px, transparent 1px 3px);
+}
+@media (prefers-reduced-motion: reduce) { body::before { display: none; } }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono, code { font-family: var(--mono); }
+.wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px 80px; }
+.crumbs { font-family: var(--mono); font-size: 12px; color: var(--fg-dim); margin: 0 0 24px; }
+.crumbs a { color: var(--fg-dim); }
+.crumbs a:hover { color: var(--accent); }
+h1 { font-size: 28px; margin: 0 0 8px; font-weight: 600; }
+h1 .accent { color: var(--accent); }
+.sub { color: var(--fg-dim); margin: 0 0 28px; font-family: var(--mono); font-size: 13px; }
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin: 16px 0;
+}
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 20px; }
+.tile {
+  display: block;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+  text-decoration: none;
+  color: var(--fg);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.tile:hover { border-color: var(--accent); transform: translateY(-1px); text-decoration: none; }
+.tile .title { font-family: var(--mono); color: var(--accent); font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+.tile .desc { color: var(--fg-dim); font-size: 13px; margin: 0; }
+.tile .badge {
+  display: inline-block; font-family: var(--mono); font-size: 10px;
+  padding: 1px 6px; border-radius: 3px;
+  background: rgba(92,210,163,0.12); color: var(--accent);
+  margin-left: 6px; vertical-align: middle;
+}
+.game-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+.score { font-family: var(--mono); color: var(--fg-dim); font-size: 13px; }
+.score strong { color: var(--accent); }
+button, .btn {
+  font-family: var(--mono);
+  font-size: 13px;
+  background: var(--bg-elev);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+button:hover, .btn:hover { border-color: var(--accent); }
+button:active { background: rgba(92,210,163,0.08); }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; font-family: var(--mono); font-size: 12px; color: var(--fg-dim); }
+.controls kbd {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 6px;
+  background: var(--bg-elev);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 18px;
+}
+canvas { display: block; margin: 12px auto; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elev); max-width: 100%; touch-action: none; }
+footer.tiny { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--fg-dim); text-align: center; }

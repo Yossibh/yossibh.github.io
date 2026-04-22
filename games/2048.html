@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2048 · Games</title>
+  <meta name="description" content="Classic 2048 tile game in your browser." />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/games/games.css" />
+  <style>
+    .board { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px; padding: 10px; max-width: 420px; margin: 12px auto; aspect-ratio: 1/1; }
+    .cell { background: #0a0e12; border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-weight: 700; font-size: 24px; color: var(--fg); transition: background 0.1s; }
+    .cell[data-v="2"]    { background: #111820; }
+    .cell[data-v="4"]    { background: #1a2530; }
+    .cell[data-v="8"]    { background: #254055; color: #d7e1ea; }
+    .cell[data-v="16"]   { background: #2f8b6d; color: #0a0e12; }
+    .cell[data-v="32"]   { background: #5cd2a3; color: #0a0e12; }
+    .cell[data-v="64"]   { background: #ffaa3c; color: #0a0e12; }
+    .cell[data-v="128"]  { background: #ff7878; color: #0a0e12; font-size: 20px; }
+    .cell[data-v="256"]  { background: #ff4c6b; color: #fff; font-size: 20px; }
+    .cell[data-v="512"]  { background: #d53067; color: #fff; font-size: 20px; }
+    .cell[data-v="1024"] { background: #a11fb6; color: #fff; font-size: 16px; }
+    .cell[data-v="2048"] { background: #5cd2a3; color: #0a0e12; font-size: 16px; box-shadow: 0 0 16px #5cd2a3; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="crumbs"><a href="/">/</a> / <a href="/games/">games</a> / 2048</p>
+    <div class="game-head">
+      <h1><span class="accent">2048</span></h1>
+      <div class="score mono">score <strong id="score">0</strong> · best <strong id="best">0</strong></div>
+    </div>
+    <p class="controls">
+      <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> / swipe — slide</span>
+      <span><kbd>R</kbd> — new game</span>
+    </p>
+    <div id="board" class="board" aria-label="2048 game board"></div>
+    <p id="status" class="mono" style="text-align:center;color:var(--fg-dim);"></p>
+  </main>
+
+<script>
+(function () {
+  var SIZE = 4;
+  var grid, score, best = parseInt(localStorage.getItem('2048-best') || '0', 10);
+  var board = document.getElementById('board');
+  document.getElementById('best').textContent = best;
+
+  function emptyGrid() {
+    var g = []; for (var i = 0; i < SIZE; i++) { g.push([]); for (var j = 0; j < SIZE; j++) g[i].push(0); } return g;
+  }
+  function spawn() {
+    var empty = [];
+    for (var i = 0; i < SIZE; i++) for (var j = 0; j < SIZE; j++) if (grid[i][j] === 0) empty.push([i, j]);
+    if (empty.length === 0) return;
+    var p = empty[(Math.random() * empty.length) | 0];
+    grid[p[0]][p[1]] = Math.random() < 0.9 ? 2 : 4;
+  }
+  function reset() {
+    grid = emptyGrid(); score = 0; spawn(); spawn();
+    document.getElementById('status').textContent = '';
+    render();
+  }
+
+  function render() {
+    board.innerHTML = '';
+    for (var i = 0; i < SIZE; i++) for (var j = 0; j < SIZE; j++) {
+      var v = grid[i][j];
+      var el = document.createElement('div');
+      el.className = 'cell';
+      if (v > 0) { el.setAttribute('data-v', v); el.textContent = v; }
+      board.appendChild(el);
+    }
+    document.getElementById('score').textContent = score;
+    document.getElementById('best').textContent = best;
+  }
+
+  function compress(row) {
+    var out = row.filter(function (v) { return v !== 0; });
+    for (var i = 0; i < out.length - 1; i++) {
+      if (out[i] === out[i + 1]) { out[i] *= 2; score += out[i]; out.splice(i + 1, 1); }
+    }
+    while (out.length < SIZE) out.push(0);
+    return out;
+  }
+
+  function rotateCW() {
+    var g = emptyGrid();
+    for (var i = 0; i < SIZE; i++) for (var j = 0; j < SIZE; j++) g[j][SIZE - 1 - i] = grid[i][j];
+    grid = g;
+  }
+  function move(dir) {
+    // Normalize to "left" by rotating: left=0, up=1, right=2, down=3 turns CW.
+    for (var r = 0; r < dir; r++) rotateCW();
+    var changed = false;
+    for (var i = 0; i < SIZE; i++) {
+      var before = grid[i].join(',');
+      var after = compress(grid[i]);
+      if (after.join(',') !== before) changed = true;
+      grid[i] = after;
+    }
+    for (var r2 = 0; r2 < (4 - dir) % 4; r2++) rotateCW();
+    if (changed) {
+      spawn();
+      if (score > best) { best = score; localStorage.setItem('2048-best', String(best)); }
+      checkEnd();
+    }
+    render();
+  }
+
+  function hasMoves() {
+    for (var i = 0; i < SIZE; i++) for (var j = 0; j < SIZE; j++) {
+      if (grid[i][j] === 0) return true;
+      if (j < SIZE - 1 && grid[i][j] === grid[i][j + 1]) return true;
+      if (i < SIZE - 1 && grid[i][j] === grid[i + 1][j]) return true;
+    }
+    return false;
+  }
+  function has2048() {
+    for (var i = 0; i < SIZE; i++) for (var j = 0; j < SIZE; j++) if (grid[i][j] >= 2048) return true;
+    return false;
+  }
+  function checkEnd() {
+    if (has2048()) document.getElementById('status').textContent = 'you reached 2048. keep going or R to restart.';
+    else if (!hasMoves()) document.getElementById('status').textContent = 'no moves left. R to restart.';
+  }
+
+  window.addEventListener('keydown', function (e) {
+    if (e.code === 'ArrowLeft') { e.preventDefault(); move(0); }
+    else if (e.code === 'ArrowUp') { e.preventDefault(); move(1); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); move(2); }
+    else if (e.code === 'ArrowDown') { e.preventDefault(); move(3); }
+    else if (e.key === 'r' || e.key === 'R') { reset(); }
+  });
+  var touch = null;
+  board.addEventListener('touchstart', function (e) { touch = e.touches[0]; }, { passive: true });
+  board.addEventListener('touchend', function (e) {
+    if (!touch) return;
+    var t = e.changedTouches[0];
+    var dx = t.clientX - touch.clientX, dy = t.clientY - touch.clientY;
+    if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+    if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 2 : 0);
+    else move(dy > 0 ? 3 : 1);
+    touch = null;
+  });
+
+  reset();
+})();
+</script>
+</body>
+</html>
