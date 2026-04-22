@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Games · Yossi Ben Hagai</title>
-  <meta name="description" content="A small arcade of browser games - T-Rex runner, Snake, Simon, Breakout, and an AI-or-Human guessing game." />
+  <meta name="description" content="A small arcade of browser games - T-Rex runner, Snake, Tetris, Breakout, Pong, Simon, and an AI-or-Human guessing game." />
   <meta name="color-scheme" content="dark" />
   <link rel="canonical" href="https://yossibh.github.io/games/" />
   <meta property="og:type" content="website" />
@@ -22,26 +22,107 @@
     <p class="sub">No ads. No tracking. No login. Just a few small things to click on.</p>
 
     <div class="tiles">
+
       <a class="tile" href="/games/dino.html">
-        <p class="title">T-Rex Runner</p>
-        <p class="desc">Jump over cacti. Gets faster. Classic offline dino.</p>
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/games/<b>dino</b></span></div>
+<pre class="art">          __
+         / _)
+  _.----._/ /
+ /         /
+_/_( )_(_)_(
+</pre>
+        <div class="meta">
+          <p class="title">T-Rex Runner</p>
+          <p class="desc">Jump over cacti. Gets faster. Classic offline dino.</p>
+        </div>
       </a>
+
       <a class="tile" href="/games/snake.html">
-        <p class="title">Snake</p>
-        <p class="desc">Eat the dot. Don't eat yourself. Arrow keys.</p>
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/games/<b>snake</b></span></div>
+<pre class="art">  __
+ /OO\_______
+ \__/ / / / >
+      ~ ~ ~
+        • food
+</pre>
+        <div class="meta">
+          <p class="title">Snake</p>
+          <p class="desc">Eat the dot. Don't eat yourself. Arrow keys or swipe.</p>
+        </div>
       </a>
-      <a class="tile" href="/games/simon.html">
-        <p class="title">Simon</p>
-        <p class="desc">Watch the colour/tone sequence, repeat it back. Gets longer every round.</p>
+
+      <a class="tile" href="/games/tetris.html">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/games/<b>tetris</b></span></div>
+<pre class="art">   ##
+   ##
+ ######
+     ##
+ ##  ##  ##
+ ########
+</pre>
+        <div class="meta">
+          <p class="title">Tetris</p>
+          <p class="desc">Stack the tetrominoes, clear lines, don't top out.</p>
+        </div>
       </a>
+
       <a class="tile" href="/games/breakout.html">
-        <p class="title">Breakout</p>
-        <p class="desc">Bounce the ball, break the bricks. Paddle with arrows, mouse, or touch.</p>
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/games/<b>breakout</b></span></div>
+<pre class="art">[==][==][==][==][==]
+[==][==][==][==][==]
+
+       o
+
+    ========
+</pre>
+        <div class="meta">
+          <p class="title">Breakout</p>
+          <p class="desc">Bounce the ball, break the bricks. Paddle with arrows, mouse, or touch.</p>
+        </div>
       </a>
+
+      <a class="tile" href="/games/pong.html">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/games/<b>pong</b></span></div>
+<pre class="art"> 0        |        0
+
+ |                  |
+ |        .         |
+ |                  |
+ |                  |
+</pre>
+        <div class="meta">
+          <p class="title">Pong vs CPU</p>
+          <p class="desc">Classic paddle game against a beatable AI. First to 7.</p>
+        </div>
+      </a>
+
+      <a class="tile" href="/games/simon.html">
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/games/<b>simon</b></span></div>
+<pre class="art">   .-""""-.
+  /  G  O  \
+ |----------|
+  \  Y  R  /
+   '-....-'
+</pre>
+        <div class="meta">
+          <p class="title">Simon</p>
+          <p class="desc">Watch the colour/tone sequence, repeat it back. One step longer each round.</p>
+        </div>
+      </a>
+
       <a class="tile" href="/games/ai-or-human.html">
-        <p class="title">AI or Human? <span class="badge">AI</span></p>
-        <p class="desc">Guess if a poem was written by a person or a model. Calls a free AI API for live rounds.</p>
+        <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/games/<b>ai-or-human</b></span></div>
+<pre class="art"> [o_o]  vs  (^_^)
+ |___|      |___|
+  AI        human
+   ?    ?    ?
+</pre>
+        <div class="meta">
+          <p class="title">AI or Human? <span class="badge">AI</span></p>
+          <p class="desc">Guess if a poem was written by a person or a model. Calls a free AI API for live rounds.</p>
+        </div>
       </a>
+
     </div>
 
     <div class="card" style="margin-top:32px">
@@ -69,8 +150,10 @@
   var entries = [
     { k: 'dino-best',     label: 'T-Rex' },
     { k: 'snake-best',    label: 'Snake' },
-    { k: 'simon-best',    label: 'Simon' },
-    { k: 'breakout-best', label: 'Breakout' }
+    { k: 'tetris-best',   label: 'Tetris' },
+    { k: 'breakout-best', label: 'Breakout' },
+    { k: 'pong-best',     label: 'Pong rally' },
+    { k: 'simon-best',    label: 'Simon' }
   ];
   var host = document.getElementById('scoreboard');
   entries.forEach(function (e) {

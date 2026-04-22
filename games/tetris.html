@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tetris · Games</title>
+  <meta name="description" content="Classic Tetris — stack the tetrominoes, clear lines, don't top out." />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/games/games.css" />
+  <style>
+    .tetris-wrap { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+    .side { min-width: 140px; font-family: var(--mono); font-size: 12px; color: var(--fg-dim); }
+    .side h3 { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 6px; }
+    .side .box { background: var(--bg-elev); border: 1px solid var(--border); border-radius: 4px; padding: 10px; margin-bottom: 10px; }
+    .side .v { color: var(--fg); font-size: 20px; font-weight: 600; }
+    #next { display: block; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="crumbs"><a href="/">/</a> / <a href="/games/">games</a> / tetris</p>
+    <div class="game-head">
+      <h1><span class="accent">Tetris</span></h1>
+      <div class="score mono">score <strong id="score">0</strong> · best <strong id="best">0</strong> · lines <strong id="lines">0</strong></div>
+    </div>
+    <p class="controls">
+      <span><kbd>←</kbd> <kbd>→</kbd> - move</span>
+      <span><kbd>↑</kbd> - rotate</span>
+      <span><kbd>↓</kbd> - soft drop</span>
+      <span><kbd>space</kbd> - hard drop</span>
+      <span><kbd>P</kbd> - pause</span>
+      <span><kbd>R</kbd> - restart</span>
+      <span id="sfx-slot"></span>
+    </p>
+    <div class="tetris-wrap">
+      <canvas id="game" width="240" height="480" aria-label="Tetris board"></canvas>
+      <div class="side">
+        <div class="box">
+          <h3>next</h3>
+          <canvas id="next" width="96" height="96"></canvas>
+        </div>
+        <div class="box">
+          <h3>level</h3>
+          <div class="v" id="level">1</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+<script src="/games/sfx.js"></script>
+<script>
+(function () {
+  var canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+  var nextCvs = document.getElementById('next'), nctx = nextCvs.getContext('2d');
+  var COLS = 10, ROWS = 20, CELL = 24;
+
+  // tetromino shapes (rotations derived). 1 = filled.
+  var SHAPES = {
+    I: { color: '#5cd2a3', blocks: [[0,0],[1,0],[2,0],[3,0]], w: 4, h: 1 },
+    O: { color: '#e5d76b', blocks: [[0,0],[1,0],[0,1],[1,1]], w: 2, h: 2 },
+    T: { color: '#a14ab8', blocks: [[1,0],[0,1],[1,1],[2,1]], w: 3, h: 2 },
+    S: { color: '#8bd17c', blocks: [[1,0],[2,0],[0,1],[1,1]], w: 3, h: 2 },
+    Z: { color: '#ff7878', blocks: [[0,0],[1,0],[1,1],[2,1]], w: 3, h: 2 },
+    J: { color: '#5cb5d2', blocks: [[0,0],[0,1],[1,1],[2,1]], w: 3, h: 2 },
+    L: { color: '#ffaa3c', blocks: [[2,0],[0,1],[1,1],[2,1]], w: 3, h: 2 }
+  };
+  var TYPES = Object.keys(SHAPES);
+
+  function rotate(blocks) {
+    // rotate 90° CW around (0,0) bounding box, then normalize to >=0
+    var r = blocks.map(function (b) { return [b[1], -b[0]]; });
+    var minX = Math.min.apply(null, r.map(function (b) { return b[0]; }));
+    var minY = Math.min.apply(null, r.map(function (b) { return b[1]; }));
+    return r.map(function (b) { return [b[0] - minX, b[1] - minY]; });
+  }
+
+  var state;
+  function emptyGrid() {
+    var g = [];
+    for (var y = 0; y < ROWS; y++) { var row = []; for (var x = 0; x < COLS; x++) row.push(null); g.push(row); }
+    return g;
+  }
+
+  function newPiece() {
+    var t = TYPES[Math.floor(Math.random() * TYPES.length)];
+    var s = SHAPES[t];
+    return {
+      type: t,
+      color: s.color,
+      blocks: s.blocks.map(function (b) { return b.slice(); }),
+      x: Math.floor((COLS - s.w) / 2),
+      y: 0
+    };
+  }
+
+  function reset() {
+    state = {
+      grid: emptyGrid(),
+      cur: newPiece(),
+      nxt: newPiece(),
+      score: 0,
+      lines: 0,
+      level: 1,
+      best: parseInt(localStorage.getItem('tetris-best') || '0', 10),
+      dropClock: 0,
+      over: false,
+      paused: false
+    };
+    updateHUD();
+  }
+  function updateHUD() {
+    document.getElementById('score').textContent = state.score;
+    document.getElementById('best').textContent = state.best;
+    document.getElementById('lines').textContent = state.lines;
+    document.getElementById('level').textContent = state.level;
+  }
+
+  function collides(p, dx, dy, blocks) {
+    var bs = blocks || p.blocks;
+    for (var i = 0; i < bs.length; i++) {
+      var x = p.x + bs[i][0] + dx, y = p.y + bs[i][1] + dy;
+      if (x < 0 || x >= COLS || y >= ROWS) return true;
+      if (y >= 0 && state.grid[y][x]) return true;
+    }
+    return false;
+  }
+
+  function lock() {
+    var p = state.cur;
+    for (var i = 0; i < p.blocks.length; i++) {
+      var x = p.x + p.blocks[i][0], y = p.y + p.blocks[i][1];
+      if (y < 0) { state.over = true; SFX.crash(); return; }
+      state.grid[y][x] = p.color;
+    }
+    // clear lines
+    var cleared = 0;
+    for (var r = ROWS - 1; r >= 0; r--) {
+      if (state.grid[r].every(function (c) { return c; })) {
+        state.grid.splice(r, 1);
+        state.grid.unshift(new Array(COLS).fill(null));
+        cleared++; r++;
+      }
+    }
+    if (cleared > 0) {
+      var pts = [0, 100, 300, 500, 800][cleared] * state.level;
+      state.score += pts;
+      state.lines += cleared;
+      state.level = 1 + Math.floor(state.lines / 10);
+      if (cleared === 4) SFX.win(); else SFX.eat();
+      if (state.score > state.best) { state.best = state.score; localStorage.setItem('tetris-best', String(state.best)); }
+    }
+    state.cur = state.nxt;
+    state.nxt = newPiece();
+    if (collides(state.cur, 0, 0)) { state.over = true; SFX.crash(); }
+    updateHUD();
+  }
+
+  function softDrop() {
+    if (!collides(state.cur, 0, 1)) { state.cur.y++; }
+    else { lock(); }
+  }
+  function hardDrop() {
+    while (!collides(state.cur, 0, 1)) state.cur.y++;
+    SFX.paddle();
+    lock();
+  }
+  function move(dx) { if (!collides(state.cur, dx, 0)) state.cur.x += dx; }
+  function tryRotate() {
+    var rb = rotate(state.cur.blocks);
+    var kicks = [0, -1, 1, -2, 2];
+    for (var k = 0; k < kicks.length; k++) {
+      if (!collides(state.cur, kicks[k], 0, rb)) {
+        state.cur.blocks = rb; state.cur.x += kicks[k]; SFX.point(); return;
+      }
+    }
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (state.over) { if (e.code === 'KeyR') reset(); return; }
+    if (e.code === 'KeyP') { state.paused = !state.paused; return; }
+    if (state.paused) return;
+    if (e.code === 'ArrowLeft')  { e.preventDefault(); move(-1); }
+    else if (e.code === 'ArrowRight') { e.preventDefault(); move(1); }
+    else if (e.code === 'ArrowDown')  { e.preventDefault(); softDrop(); state.dropClock = 0; }
+    else if (e.code === 'ArrowUp')    { e.preventDefault(); tryRotate(); }
+    else if (e.code === 'Space')      { e.preventDefault(); hardDrop(); }
+    else if (e.code === 'KeyR')       { reset(); }
+  });
+
+  // touch: swipe left/right/down; tap rotate
+  var touch = null;
+  canvas.addEventListener('touchstart', function (e) {
+    var t = e.touches[0]; touch = { x: t.clientX, y: t.clientY, moved: false, t: Date.now() };
+  }, { passive: true });
+  canvas.addEventListener('touchmove', function (e) {
+    if (!touch) return;
+    var t = e.touches[0];
+    var dx = t.clientX - touch.x, dy = t.clientY - touch.y;
+    if (Math.abs(dx) > 22) { move(dx > 0 ? 1 : -1); touch.x = t.clientX; touch.moved = true; }
+    if (dy > 22) { softDrop(); touch.y = t.clientY; touch.moved = true; }
+  }, { passive: true });
+  canvas.addEventListener('touchend', function () {
+    if (touch && !touch.moved && Date.now() - touch.t < 260) tryRotate();
+    touch = null;
+  });
+
+  function step() {
+    if (state.over || state.paused) return;
+    state.dropClock++;
+    var speed = Math.max(6, 48 - (state.level - 1) * 4);
+    if (state.dropClock >= speed) { state.dropClock = 0; softDrop(); }
+  }
+
+  function drawCell(c, x, y, color) {
+    c.fillStyle = color;
+    c.fillRect(x * CELL, y * CELL, CELL, CELL);
+    c.fillStyle = 'rgba(0,0,0,0.25)';
+    c.fillRect(x * CELL, y * CELL + CELL - 3, CELL, 3);
+    c.fillStyle = 'rgba(255,255,255,0.08)';
+    c.fillRect(x * CELL, y * CELL, CELL, 3);
+  }
+
+  function render() {
+    ctx.fillStyle = '#0a0e12'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // grid cells
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+    for (var x = 1; x < COLS; x++) { ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, ROWS * CELL); ctx.stroke(); }
+    for (var y = 1; y < ROWS; y++) { ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(COLS * CELL, y * CELL); ctx.stroke(); }
+    // locked
+    for (var yy = 0; yy < ROWS; yy++) for (var xx = 0; xx < COLS; xx++) {
+      if (state.grid[yy][xx]) drawCell(ctx, xx, yy, state.grid[yy][xx]);
+    }
+    // current
+    var p = state.cur;
+    if (p) {
+      // ghost
+      var gy = 0; while (!collides(p, 0, gy + 1)) gy++;
+      for (var i = 0; i < p.blocks.length; i++) {
+        var bx = p.x + p.blocks[i][0], by = p.y + p.blocks[i][1] + gy;
+        ctx.strokeStyle = 'rgba(92,210,163,0.35)';
+        ctx.strokeRect(bx * CELL + 2, by * CELL + 2, CELL - 4, CELL - 4);
+      }
+      for (var j = 0; j < p.blocks.length; j++) {
+        drawCell(ctx, p.x + p.blocks[j][0], p.y + p.blocks[j][1], p.color);
+      }
+    }
+    // next preview
+    nctx.fillStyle = '#0a0e12'; nctx.fillRect(0, 0, nextCvs.width, nextCvs.height);
+    var n = state.nxt;
+    if (n) {
+      var cs = 18;
+      var xs = n.blocks.map(function (b) { return b[0]; }), ys = n.blocks.map(function (b) { return b[1]; });
+      var ox = (nextCvs.width / cs - (Math.max.apply(null, xs) + 1)) / 2;
+      var oy = (nextCvs.height / cs - (Math.max.apply(null, ys) + 1)) / 2;
+      for (var k = 0; k < n.blocks.length; k++) {
+        nctx.fillStyle = n.color;
+        nctx.fillRect((n.blocks[k][0] + ox) * cs, (n.blocks[k][1] + oy) * cs, cs, cs);
+        nctx.fillStyle = 'rgba(0,0,0,0.25)';
+        nctx.fillRect((n.blocks[k][0] + ox) * cs, (n.blocks[k][1] + oy) * cs + cs - 2, cs, 2);
+      }
+    }
+    if (state.over || state.paused) {
+      ctx.fillStyle = 'rgba(10,14,18,0.8)';
+      ctx.fillRect(0, canvas.height / 2 - 36, canvas.width, 72);
+      ctx.fillStyle = '#d7e1ea';
+      ctx.textAlign = 'center';
+      ctx.font = '700 18px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillText(state.over ? 'TOP OUT' : 'PAUSED', canvas.width / 2, canvas.height / 2);
+      ctx.fillStyle = '#8a99a8'; ctx.font = '12px ui-monospace, Menlo, Consolas, monospace';
+      ctx.fillText(state.over ? 'press R to restart' : 'press P to resume', canvas.width / 2, canvas.height / 2 + 18);
+    }
+  }
+
+  function loop() { step(); render(); requestAnimationFrame(loop); }
+
+  reset();
+  SFX.mountToggle(document.getElementById('sfx-slot'));
+  // slow down the main step loop — use rAF but step only ~60fps via render tick
+  loop();
+})();
+</script>
+</body>
+</html>

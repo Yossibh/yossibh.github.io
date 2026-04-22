@@ -36,6 +36,16 @@
     <priority>0.4</priority>
   </url>
   <url>
+    <loc>https://yossibh.github.io/games/tetris.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://yossibh.github.io/games/pong.html</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://yossibh.github.io/games/ai-or-human.html</loc>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>

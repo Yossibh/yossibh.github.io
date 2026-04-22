@@ -44,21 +44,49 @@ h1 .accent { color: var(--accent); }
   padding: 18px 20px;
   margin: 16px 0;
 }
-.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 20px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; margin-top: 20px; }
 .tile {
   display: block;
   background: var(--bg-elev);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 18px;
+  border-radius: 6px;
   text-decoration: none;
   color: var(--fg);
-  transition: border-color 0.15s, transform 0.15s;
+  overflow: hidden;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
 }
-.tile:hover { border-color: var(--accent); transform: translateY(-1px); text-decoration: none; }
-.tile .title { font-family: var(--mono); color: var(--accent); font-size: 14px; font-weight: 600; margin: 0 0 6px; }
-.tile .desc { color: var(--fg-dim); font-size: 13px; margin: 0; }
-.tile .badge {
+.tile:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(92,210,163,0.08); text-decoration: none; }
+.tile .titlebar {
+  display: flex; align-items: center; gap: 8px;
+  background: #0f161d; border-bottom: 1px solid var(--border);
+  padding: 7px 10px;
+  font-family: var(--mono); font-size: 11px; color: var(--fg-dim);
+}
+.tile .dots { display: inline-flex; gap: 5px; }
+.tile .dots i { width: 10px; height: 10px; border-radius: 50%; display: block; }
+.tile .dots i:nth-child(1) { background: #ff6057; }
+.tile .dots i:nth-child(2) { background: #ffbd2e; }
+.tile .dots i:nth-child(3) { background: #28c941; }
+.tile .titlebar .path { margin-left: 4px; color: var(--fg-dim); }
+.tile .titlebar .path b { color: var(--accent); font-weight: 600; }
+.tile .art {
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.15;
+  white-space: pre;
+  color: var(--accent);
+  background: var(--bg);
+  padding: 12px 12px 10px;
+  text-align: center;
+  overflow: hidden;
+  min-height: 92px;
+  display: flex; align-items: center; justify-content: center;
+}
+.tile .art.wide { font-size: 9px; }
+.tile .meta { padding: 10px 14px 14px; }
+.tile .meta .title { font-family: var(--mono); color: var(--accent); font-size: 14px; font-weight: 600; margin: 0 0 4px; }
+.tile .meta .desc  { color: var(--fg-dim); font-size: 13px; margin: 0; }
+.tile .meta .badge {
   display: inline-block; font-family: var(--mono); font-size: 10px;
   padding: 1px 6px; border-radius: 3px;
   background: rgba(92,210,163,0.12); color: var(--accent);

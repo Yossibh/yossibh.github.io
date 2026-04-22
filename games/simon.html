@@ -161,7 +161,6 @@
   }
 
   function nextRound() {
-    if (phase === 'showing') return;
     if (phase === 'over') { seq = []; }
     seq.push(Math.floor(Math.random() * 4));
     updateHUD();

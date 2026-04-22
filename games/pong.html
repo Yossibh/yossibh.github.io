@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pong vs CPU · Games</title>
+  <meta name="description" content="Classic Pong against a CPU paddle — first to 7 wins." />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/games/games.css" />
+</head>
+<body>
+  <main class="wrap">
+    <p class="crumbs"><a href="/">/</a> / <a href="/games/">games</a> / pong</p>
+    <div class="game-head">
+      <h1><span class="accent">Pong</span> vs CPU</h1>
+      <div class="score mono">you <strong id="scoreP">0</strong> · cpu <strong id="scoreC">0</strong> · best rally <strong id="best">0</strong></div>
+    </div>
+    <p class="controls">
+      <span><kbd>↑</kbd> <kbd>↓</kbd> or <kbd>W</kbd> <kbd>S</kbd> - paddle</span>
+      <span>mouse / drag - paddle</span>
+      <span><kbd>space</kbd> - serve</span>
+      <span><kbd>R</kbd> - restart</span>
+      <span id="sfx-slot"></span>
+    </p>
+    <canvas id="game" width="640" height="400" aria-label="Pong canvas"></canvas>
+  </main>
+
+<script src="/games/sfx.js"></script>
+<script>
+(function () {
+  var canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var PAD_W = 10, PAD_H = 70, BALL = 8;
+  var WIN_SCORE = 7;
+
+  var state;
+  function reset() {
+    state = {
+      p: { y: H / 2 - PAD_H / 2, score: 0 },
+      c: { y: H / 2 - PAD_H / 2, score: 0 },
+      ball: null,
+      rally: 0,
+      bestRally: parseInt(localStorage.getItem('pong-best') || '0', 10),
+      status: 'press space / tap to serve',
+      over: false,
+      keys: { up: false, down: false }
+    };
+    serve(Math.random() < 0.5 ? -1 : 1, true);
+    updateHUD();
+  }
+  function serve(dir, stuck) {
+    state.ball = { x: W / 2, y: H / 2, vx: 0, vy: 0, stuck: !!stuck, dir: dir };
+  }
+  function launch() {
+    if (!state.ball.stuck || state.over) return;
+    state.ball.stuck = false;
+    state.rally = 0;
+    var angle = (Math.random() * 0.5 - 0.25);
+    var speed = 5.2;
+    state.ball.vx = Math.cos(angle) * speed * state.ball.dir;
+    state.ball.vy = Math.sin(angle) * speed;
+    state.status = '';
+    SFX.paddle();
+  }
+  function updateHUD() {
+    document.getElementById('scoreP').textContent = state.p.score;
+    document.getElementById('scoreC').textContent = state.c.score;
+    document.getElementById('best').textContent = state.bestRally;
+  }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); state.keys.up = true; }
+    else if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); state.keys.down = true; }
+    else if (e.code === 'Space') { e.preventDefault(); launch(); }
+    else if (e.code === 'KeyR') { reset(); }
+  });
+  document.addEventListener('keyup', function (e) {
+    if (e.code === 'ArrowUp' || e.code === 'KeyW') state.keys.up = false;
+    else if (e.code === 'ArrowDown' || e.code === 'KeyS') state.keys.down = false;
+  });
+
+  function pointerY(clientY) {
+    var r = canvas.getBoundingClientRect();
+    var scale = canvas.height / r.height;
+    var y = (clientY - r.top) * scale;
+    state.p.y = Math.max(0, Math.min(H - PAD_H, y - PAD_H / 2));
+  }
+  canvas.addEventListener('mousemove', function (e) { pointerY(e.clientY); });
+  canvas.addEventListener('pointerdown', function (e) { e.preventDefault(); pointerY(e.clientY); launch(); });
+  canvas.addEventListener('touchmove', function (e) {
+    if (e.touches[0]) { e.preventDefault(); pointerY(e.touches[0].clientY); }
+  }, { passive: false });
+
+  function step() {
+    if (state.over) return;
+    var sp = 6;
+    if (state.keys.up)   state.p.y = Math.max(0, state.p.y - sp);
+    if (state.keys.down) state.p.y = Math.min(H - PAD_H, state.p.y + sp);
+
+    // CPU: chase ball y with capped speed; idle toward center when ball moves away
+    var target = state.ball.vx > 0 ? state.ball.y : H / 2;
+    var cpuSpeed = 4.2; // beatable
+    var cc = state.c.y + PAD_H / 2;
+    if (Math.abs(target - cc) > 4) state.c.y += Math.sign(target - cc) * cpuSpeed;
+    state.c.y = Math.max(0, Math.min(H - PAD_H, state.c.y));
+
+    var b = state.ball;
+    if (b.stuck) { b.x = W / 2; b.y = H / 2; return; }
+    b.x += b.vx; b.y += b.vy;
+
+    if (b.y - BALL < 0) { b.y = BALL; b.vy = -b.vy; SFX.wall(); }
+    else if (b.y + BALL > H) { b.y = H - BALL; b.vy = -b.vy; SFX.wall(); }
+
+    // player paddle
+    if (b.x - BALL < 20 + PAD_W && b.x - BALL > 14 &&
+        b.y > state.p.y && b.y < state.p.y + PAD_H && b.vx < 0) {
+      var hit = (b.y - (state.p.y + PAD_H / 2)) / (PAD_H / 2);
+      var speed = Math.min(10, Math.hypot(b.vx, b.vy) + 0.35);
+      b.vx = Math.cos(hit * (Math.PI / 3)) * speed;
+      b.vy = Math.sin(hit * (Math.PI / 3)) * speed;
+      state.rally++;
+      if (state.rally > state.bestRally) {
+        state.bestRally = state.rally;
+        localStorage.setItem('pong-best', String(state.bestRally));
+        updateHUD();
+      }
+      SFX.paddle();
+    }
+    // cpu paddle
+    if (b.x + BALL > W - 20 - PAD_W && b.x + BALL < W - 14 &&
+        b.y > state.c.y && b.y < state.c.y + PAD_H && b.vx > 0) {
+      var hit2 = (b.y - (state.c.y + PAD_H / 2)) / (PAD_H / 2);
+      var speed2 = Math.min(10, Math.hypot(b.vx, b.vy) + 0.35);
+      b.vx = -Math.cos(hit2 * (Math.PI / 3)) * speed2;
+      b.vy = Math.sin(hit2 * (Math.PI / 3)) * speed2;
+      state.rally++;
+      SFX.paddle();
+    }
+
+    // score
+    if (b.x < -20) { state.c.score++; SFX.lose(); pointScored(1); }
+    else if (b.x > W + 20) { state.p.score++; SFX.point(); pointScored(-1); }
+  }
+
+  function pointScored(dir) {
+    updateHUD();
+    if (state.p.score >= WIN_SCORE || state.c.score >= WIN_SCORE) {
+      state.over = true;
+      state.status = (state.p.score > state.c.score ? 'you win! ' : 'CPU wins. ') + 'press R to play again.';
+      if (state.p.score > state.c.score) SFX.win(); else SFX.lose();
+      return;
+    }
+    serve(dir, true);
+    state.status = 'press space / tap to serve';
+  }
+
+  function render() {
+    ctx.fillStyle = '#0a0e12'; ctx.fillRect(0, 0, W, H);
+    // dashed center line
+    ctx.fillStyle = 'rgba(215,225,234,0.18)';
+    for (var y = 8; y < H; y += 18) ctx.fillRect(W / 2 - 1, y, 2, 10);
+    // scores big
+    ctx.fillStyle = 'rgba(92,210,163,0.22)';
+    ctx.font = '700 64px ui-monospace, Menlo, Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(state.p.score, W / 2 - 80, 70);
+    ctx.fillText(state.c.score, W / 2 + 80, 70);
+    // paddles
+    ctx.fillStyle = '#5cd2a3'; ctx.fillRect(20, state.p.y, PAD_W, PAD_H);
+    ctx.fillStyle = '#ff7878'; ctx.fillRect(W - 20 - PAD_W, state.c.y, PAD_W, PAD_H);
+    // ball
+    ctx.fillStyle = '#d7e1ea';
+    ctx.fillRect(state.ball.x - BALL / 2, state.ball.y - BALL / 2, BALL, BALL);
+    if (state.status) {
+      ctx.fillStyle = '#d7e1ea';
+      ctx.font = '14px ui-monospace, Menlo, Consolas, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(state.status, W / 2, H - 20);
+    }
+  }
+
+  function loop() { step(); render(); requestAnimationFrame(loop); }
+  reset();
+  SFX.mountToggle(document.getElementById('sfx-slot'));
+  loop();
+})();
+</script>
+</body>
+</html>
