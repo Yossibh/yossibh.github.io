@@ -197,7 +197,7 @@
     }
     .q-card {
       position: relative;
-      min-height: 150px;
+      min-height: 172px;
       transform-style: preserve-3d;
       transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: default;
@@ -209,14 +209,31 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      padding: 16px 18px;
+      padding: 0;
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 6px;
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       transition: border-color .12s ease;
+      overflow: hidden;
     }
+    .q-titlebar {
+      display: flex; align-items: center; gap: 8px;
+      background: #0f161d;
+      border-bottom: 1px solid var(--border);
+      padding: 6px 10px;
+      font-family: var(--mono); font-size: 10px; color: var(--fg-dim);
+      flex-shrink: 0;
+    }
+    .q-titlebar .dots { display: inline-flex; gap: 5px; }
+    .q-titlebar .dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+    .q-titlebar .dots i:nth-child(1) { background: #ff6057; }
+    .q-titlebar .dots i:nth-child(2) { background: #ffbd2e; }
+    .q-titlebar .dots i:nth-child(3) { background: #28c941; }
+    .q-titlebar .path { margin-left: 2px; }
+    .q-titlebar .path b { color: var(--accent); font-weight: 600; }
+    .q-face-body { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; min-height: 0; }
     .q-card:hover .q-face { border-color: var(--accent-dim); }
     .q-face-back {
       transform: rotateY(180deg);
@@ -227,6 +244,7 @@
       gap: 4px;
       overflow: hidden;
     }
+    .q-face-back .q-face-body { gap: 4px; }
     .q-face-back .q-back-cmd { color: var(--accent); margin-bottom: 4px; }
     .q-face-back .q-back-k { color: var(--accent); display: inline-block; min-width: 58px; }
     .q-face-back ul { list-style: none; padding: 0; margin: 0; }
@@ -382,74 +400,94 @@
       <div class="quadrant" role="img" aria-label="Quadrant showing the four disciplines and their intersections. Hover each card for a man-page.">
         <div class="q-card q-sre">
           <div class="q-face q-face-front">
-            <span class="q-tag mono">01 · sre / platform</span>
-            <strong>Keep it up. Make it cheap. Tell the story.</strong>
-            <span class="q-meta mono">SLOs · data-engineering · K8s · ADO · FinOps · Azure</span>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/work/<b>sre</b></span></div>
+            <div class="q-face-body">
+              <span class="q-tag mono">01 · sre / platform</span>
+              <strong>Keep it up. Make it cheap. Tell the story.</strong>
+              <span class="q-meta mono">SLOs · data-engineering · K8s · ADO · FinOps · Azure</span>
+            </div>
           </div>
           <div class="q-face q-face-back" aria-hidden="true">
-            <span class="q-back-cmd">$ man sre</span>
-            <div><span class="q-back-k">NAME</span> keep it up, make it cheap, tell the story</div>
-            <div><span class="q-back-k">DOES</span></div>
-            <ul>
-              <li>SLOs over heroics</li>
-              <li>automate the boring; escalate the novel</li>
-              <li>observability before optimization</li>
-            </ul>
-            <div><span class="q-back-k">SEE ALSO</span> platform(1), toil(5), oncall(8)</div>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">$ man <b>sre</b></span></div>
+            <div class="q-face-body">
+              <div><span class="q-back-k">NAME</span> keep it up, make it cheap, tell the story</div>
+              <div><span class="q-back-k">DOES</span></div>
+              <ul>
+                <li>SLOs over heroics</li>
+                <li>automate the boring; escalate the novel</li>
+                <li>observability before optimization</li>
+              </ul>
+              <div><span class="q-back-k">SEE ALSO</span> platform(1), toil(5), oncall(8)</div>
+            </div>
           </div>
         </div>
         <div class="q-card q-ai">
           <div class="q-face q-face-front">
-            <span class="q-tag mono">02 · applied AI</span>
-            <strong>LLMs with guardrails, evals, and a job to do.</strong>
-            <span class="q-meta mono">RAG · Agents · MCP · evals · AIOps</span>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/work/<b>applied-ai</b></span></div>
+            <div class="q-face-body">
+              <span class="q-tag mono">02 · applied AI</span>
+              <strong>LLMs with guardrails, evals, and a job to do.</strong>
+              <span class="q-meta mono">RAG · Agents · MCP · evals · AIOps</span>
+            </div>
           </div>
           <div class="q-face q-face-back" aria-hidden="true">
-            <span class="q-back-cmd">$ man applied-ai</span>
-            <div><span class="q-back-k">NAME</span> LLMs with a job to do</div>
-            <div><span class="q-back-k">DOES</span></div>
-            <ul>
-              <li>evals before vibes</li>
-              <li>retrieval before fine-tuning</li>
-              <li>guardrails at the tool boundary</li>
-            </ul>
-            <div><span class="q-back-k">SEE ALSO</span> mcp(1), agents(5), evals(7)</div>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">$ man <b>applied-ai</b></span></div>
+            <div class="q-face-body">
+              <div><span class="q-back-k">NAME</span> LLMs with a job to do</div>
+              <div><span class="q-back-k">DOES</span></div>
+              <ul>
+                <li>evals before vibes</li>
+                <li>retrieval before fine-tuning</li>
+                <li>guardrails at the tool boundary</li>
+              </ul>
+              <div><span class="q-back-k">SEE ALSO</span> mcp(1), agents(5), evals(7)</div>
+            </div>
           </div>
         </div>
         <div class="q-card q-swe">
           <div class="q-face q-face-front">
-            <span class="q-tag mono">03 · software</span>
-            <strong>Cloud-native, IaC-first, supply-chain-aware.</strong>
-            <span class="q-meta mono">C# · Python · Go · IaC · containers · SDLC</span>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/work/<b>software</b></span></div>
+            <div class="q-face-body">
+              <span class="q-tag mono">03 · software</span>
+              <strong>Cloud-native, IaC-first, supply-chain-aware.</strong>
+              <span class="q-meta mono">C# · Python · Go · IaC · containers · SDLC</span>
+            </div>
           </div>
           <div class="q-face q-face-back" aria-hidden="true">
-            <span class="q-back-cmd">$ man software</span>
-            <div><span class="q-back-k">NAME</span> ship, iterate, own it</div>
-            <div><span class="q-back-k">DOES</span></div>
-            <ul>
-              <li>types and tests over docs</li>
-              <li>simple beats clever</li>
-              <li>own your own reliability</li>
-            </ul>
-            <div><span class="q-back-k">SEE ALSO</span> iac(1), ci(5), sdlc(7)</div>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">$ man <b>software</b></span></div>
+            <div class="q-face-body">
+              <div><span class="q-back-k">NAME</span> ship, iterate, own it</div>
+              <div><span class="q-back-k">DOES</span></div>
+              <ul>
+                <li>types and tests over docs</li>
+                <li>simple beats clever</li>
+                <li>own your own reliability</li>
+              </ul>
+              <div><span class="q-back-k">SEE ALSO</span> iac(1), ci(5), sdlc(7)</div>
+            </div>
           </div>
         </div>
         <div class="q-card q-sec">
           <div class="q-face q-face-front">
-            <span class="q-tag mono">04 · security &amp; networking</span>
-            <strong>Zero trust. Real handshakes. Hard guarantees.</strong>
-            <span class="q-meta mono">Zero Trust · Entra · PKI · PenTesting · cross-domain</span>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">~/work/<b>security</b></span></div>
+            <div class="q-face-body">
+              <span class="q-tag mono">04 · security &amp; networking</span>
+              <strong>Zero trust. Real handshakes. Hard guarantees.</strong>
+              <span class="q-meta mono">Zero Trust · Entra · PKI · PenTesting · cross-domain</span>
+            </div>
           </div>
           <div class="q-face q-face-back" aria-hidden="true">
-            <span class="q-back-cmd">$ man security</span>
-            <div><span class="q-back-k">NAME</span> zero trust, real handshakes</div>
-            <div><span class="q-back-k">DOES</span></div>
-            <ul>
-              <li>assume breach, verify always</li>
-              <li>identity is the new perimeter</li>
-              <li>crypto protects; design enables</li>
-            </ul>
-            <div><span class="q-back-k">SEE ALSO</span> entra(1), zero-trust(5), pki(7)</div>
+            <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path">$ man <b>security</b></span></div>
+            <div class="q-face-body">
+              <div><span class="q-back-k">NAME</span> zero trust, real handshakes</div>
+              <div><span class="q-back-k">DOES</span></div>
+              <ul>
+                <li>assume breach, verify always</li>
+                <li>identity is the new perimeter</li>
+                <li>crypto protects; design enables</li>
+              </ul>
+              <div><span class="q-back-k">SEE ALSO</span> entra(1), zero-trust(5), pki(7)</div>
+            </div>
           </div>
         </div>
 
