@@ -302,16 +302,45 @@
     .q-center {
       position: absolute;
       top: 50%; left: 50%; transform: translate(-50%, -50%);
-      font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
-      color: var(--bg);
-      background: var(--accent);
-      padding: 6px 14px;
+      width: 56px; height: 56px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+      background: var(--bg-elev);
       border-radius: 999px;
-      font-weight: 700;
       box-shadow: 0 0 0 4px var(--bg-elev), 0 0 0 5px var(--accent-dim);
       pointer-events: none;
       transition: opacity 0.25s ease;
       z-index: 2;
+    }
+    .q-center svg { display: block; overflow: visible; }
+    .q-center .qc-ring {
+      transform-origin: 22px 22px;
+      animation: qc-spin 14s linear infinite;
+    }
+    .q-center .qc-dot {
+      animation: qc-dot-pulse 2.4s ease-in-out infinite;
+    }
+    .q-center .qc {
+      transform-origin: 22px 22px;
+      opacity: 0.55;
+      animation: qc-pulse 2.4s ease-in-out infinite;
+    }
+    .q-center .qc-n { animation-delay: 0s;    }
+    .q-center .qc-e { animation-delay: 0.6s;  }
+    .q-center .qc-s { animation-delay: 1.2s;  }
+    .q-center .qc-w { animation-delay: 1.8s;  }
+
+    @keyframes qc-pulse {
+      0%,  70%, 100% { opacity: 0.45; filter: none; transform: scale(1); }
+      15%            { opacity: 1;    filter: drop-shadow(0 0 4px var(--accent)); transform: scale(1.08); }
+      40%            { opacity: 0.7;  }
+    }
+    @keyframes qc-dot-pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); transform-origin: 22px 22px; }
+      50%      { opacity: 1;   transform: scale(1.35); transform-origin: 22px 22px; }
+    }
+    @keyframes qc-spin {
+      to { transform: rotate(360deg); }
     }
     .q-center::after {
       content: "";
@@ -338,6 +367,9 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .q-center::after { animation: none; }
+      .q-center .qc,
+      .q-center .qc-ring,
+      .q-center .qc-dot { animation: none; opacity: 0.7; }
     }
 
     /* ── Maximize-on-hover (desktop) ─────────────────────────────────────── */
@@ -539,7 +571,18 @@
         <span class="q-edge q-edge-bottom mono" aria-hidden="true">DevSecOps · supply-chain security</span>
         <span class="q-edge q-edge-left mono" aria-hidden="true">Platform engineering</span>
         <span class="q-edge q-edge-right mono" aria-hidden="true">AI safety · secure agents</span>
-        <span class="q-center mono" aria-hidden="true">origin</span>
+        <span class="q-center" aria-hidden="true">
+          <svg viewBox="0 0 44 44" width="44" height="44" role="presentation">
+            <circle class="qc-ring" cx="22" cy="22" r="20" fill="none" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
+            <g class="qc-arrows" fill="currentColor">
+              <path class="qc qc-n" d="M22 3 L28 13 H24 V20 H20 V13 H16 Z"/>
+              <path class="qc qc-e" d="M41 22 L31 28 V24 H24 V20 H31 V16 Z"/>
+              <path class="qc qc-s" d="M22 41 L16 31 H20 V24 H24 V31 H28 Z"/>
+              <path class="qc qc-w" d="M3 22 L13 16 V20 H20 V24 H13 V28 Z"/>
+            </g>
+            <circle class="qc-dot" cx="22" cy="22" r="2" fill="currentColor"/>
+          </svg>
+        </span>
       </div>
     </section>
 
