@@ -17,12 +17,15 @@
       <div class="score mono">score <strong id="score">0</strong> · best <strong id="best">0</strong></div>
     </div>
     <p class="controls">
-      <span><kbd>space</kbd> / <kbd>↑</kbd> / tap — jump</span>
-      <span><kbd>↓</kbd> — duck</span>
-      <span><kbd>R</kbd> — restart</span>
+      <span><kbd>space</kbd> / <kbd>↑</kbd> / tap - jump</span>
+      <span><kbd>↓</kbd> - duck</span>
+      <span><kbd>R</kbd> - restart</span>
+      <span id="sfx-slot"></span>
     </p>
     <canvas id="game" width="800" height="240" aria-label="T-Rex runner game canvas"></canvas>
   </main>
+
+<script src="/games/sfx.js"></script>
 
 <script>
 (function () {
@@ -66,6 +69,7 @@
     if (state.over) { reset(); return; }
     if (state.dino.y >= GROUND_Y - 1) {
       state.dino.vy = JUMP_V;
+      SFX.jump();
     }
   }
   function duck(on) { state.dino.ducking = !!on; }
@@ -143,6 +147,7 @@
   function gameOver() {
     state.over = true;
     state.running = false;
+    SFX.crash();
     if (state.score > state.best) {
       state.best = state.score;
       localStorage.setItem('dino-best', String(state.best));
@@ -233,6 +238,7 @@
     requestAnimationFrame(loop);
   }
   loop();
+  SFX.mountToggle(document.getElementById('sfx-slot'));
 })();
 </script>
 </body>

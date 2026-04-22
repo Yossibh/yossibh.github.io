@@ -56,8 +56,10 @@
     <p class="note">
       AI rounds call <a href="https://pollinations.ai" rel="noopener noreferrer">pollinations.ai</a>, a free/keyless LLM text endpoint, from your browser. No tracking, no account, no server of mine in the middle. If the API is slow or down, the game falls back to a curated pool. Human snippets are from the public domain (mostly old poets).
     </p>
+    <div class="stats" style="display:flex; justify-content:flex-end; margin-top:-8px; margin-bottom: 8px;"><span id="sfx-slot"></span></div>
   </main>
 
+<script src="/games/sfx.js"></script>
 <script>
 (function () {
   // Public-domain human poetry / microfiction. Short, varied voices.
@@ -155,7 +157,7 @@
     if (state.answered) return;
     state.answered = true;
     var correct = (guess === state.current.kind);
-    if (correct) state.right += 1; else state.wrong += 1;
+    if (correct) { state.right += 1; SFX.correct(); } else { state.wrong += 1; SFX.wrong(); }
     setStats();
     var v = qs('verdict');
     v.className = 'verdict ' + (correct ? 'right' : 'wrong');
@@ -178,6 +180,7 @@
   qs('nextBtn').addEventListener('click', function () { nextRound(); });
 
   nextRound();
+  SFX.mountToggle(document.getElementById('sfx-slot'));
 })();
 </script>
 </body>

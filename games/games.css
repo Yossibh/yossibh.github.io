@@ -95,3 +95,18 @@ button:disabled { opacity: 0.4; cursor: not-allowed; }
 }
 canvas { display: block; margin: 12px auto; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-elev); max-width: 100%; touch-action: none; }
 footer.tiny { margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--fg-dim); text-align: center; }
+.sfx-toggle {
+  font-family: var(--mono); font-size: 11px;
+  background: var(--bg-elev); color: var(--fg-dim);
+  border: 1px solid var(--border); border-radius: 3px;
+  padding: 2px 8px; cursor: pointer;
+}
+.sfx-toggle:hover { border-color: var(--accent); color: var(--fg); }
+.sfx-toggle[aria-pressed="true"] { color: var(--fg-dim); }
+.scoreboard { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-top: 12px; }
+.scoreboard .cell {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+  padding: 10px 12px; font-family: var(--mono);
+}
+.scoreboard .cell .n { color: var(--fg-dim); font-size: 11px; }
+.scoreboard .cell .v { color: var(--accent); font-size: 18px; font-weight: 600; }

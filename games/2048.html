@@ -32,13 +32,15 @@
       <div class="score mono">score <strong id="score">0</strong> · best <strong id="best">0</strong></div>
     </div>
     <p class="controls">
-      <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> / swipe — slide</span>
-      <span><kbd>R</kbd> — new game</span>
+      <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> / swipe - slide</span>
+      <span><kbd>R</kbd> - new game</span>
+      <span id="sfx-slot"></span>
     </p>
     <div id="board" class="board" aria-label="2048 game board"></div>
     <p id="status" class="mono" style="text-align:center;color:var(--fg-dim);"></p>
   </main>
 
+<script src="/games/sfx.js"></script>
 <script>
 (function () {
   var SIZE = 4;
@@ -77,10 +79,12 @@
 
   function compress(row) {
     var out = row.filter(function (v) { return v !== 0; });
+    var merged = false;
     for (var i = 0; i < out.length - 1; i++) {
-      if (out[i] === out[i + 1]) { out[i] *= 2; score += out[i]; out.splice(i + 1, 1); }
+      if (out[i] === out[i + 1]) { out[i] *= 2; score += out[i]; out.splice(i + 1, 1); merged = true; }
     }
     while (out.length < SIZE) out.push(0);
+    if (merged) SFX.merge();
     return out;
   }
 
@@ -121,8 +125,8 @@
     return false;
   }
   function checkEnd() {
-    if (has2048()) document.getElementById('status').textContent = 'you reached 2048. keep going or R to restart.';
-    else if (!hasMoves()) document.getElementById('status').textContent = 'no moves left. R to restart.';
+    if (has2048()) { document.getElementById('status').textContent = 'you reached 2048. keep going or R to restart.'; SFX.win(); }
+    else if (!hasMoves()) { document.getElementById('status').textContent = 'no moves left. R to restart.'; SFX.lose(); }
   }
 
   window.addEventListener('keydown', function (e) {
@@ -145,6 +149,7 @@
   });
 
   reset();
+  SFX.mountToggle(document.getElementById('sfx-slot'));
 })();
 </script>
 </body>

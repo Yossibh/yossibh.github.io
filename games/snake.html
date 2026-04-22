@@ -17,12 +17,15 @@
       <div class="score mono">length <strong id="score">3</strong> · best <strong id="best">0</strong></div>
     </div>
     <p class="controls">
-      <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> / swipe — move</span>
-      <span><kbd>P</kbd> — pause</span>
-      <span><kbd>R</kbd> — restart</span>
+      <span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> / swipe - move</span>
+      <span><kbd>P</kbd> - pause</span>
+      <span><kbd>R</kbd> - restart</span>
+      <span id="sfx-slot"></span>
     </p>
     <canvas id="game" width="480" height="480" aria-label="Snake game canvas"></canvas>
   </main>
+
+<script src="/games/sfx.js"></script>
 
 <script>
 (function () {
@@ -102,6 +105,7 @@
     if (state.snake.some(function (s) { return s.x === nh.x && s.y === nh.y; })) { gameOver(); return; }
     state.snake.unshift(nh);
     if (nh.x === state.food.x && nh.y === state.food.y) {
+      SFX.eat();
       placeFood();
       if (state.speed > 3) state.speed = Math.max(3, state.speed - 0.2);
     } else {
@@ -111,6 +115,7 @@
 
   function gameOver() {
     state.over = true;
+    SFX.crash();
     var len = state.snake.length;
     if (len > state.best) { state.best = len; localStorage.setItem('snake-best', String(len)); }
   }
@@ -148,6 +153,7 @@
   placeFood();
   function loop() { step(); render(); requestAnimationFrame(loop); }
   loop();
+  SFX.mountToggle(document.getElementById('sfx-slot'));
 })();
 </script>
 </body>
