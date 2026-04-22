@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simon · Games</title>
+  <meta name="description" content="Simon Says — watch the sequence, repeat it back. Adds one step each round." />
+  <meta name="color-scheme" content="dark" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="stylesheet" href="/games/games.css" />
+  <style>
+    .simon-wrap { display: grid; place-items: center; margin: 24px 0; }
+    .simon {
+      position: relative;
+      width: min(380px, 86vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      padding: 10px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 10px;
+    }
+    .pad {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      transition: filter 0.08s, box-shadow 0.08s;
+      opacity: 0.55;
+      touch-action: manipulation;
+    }
+    .pad.lit { opacity: 1; filter: brightness(1.6); box-shadow: 0 0 24px currentColor; }
+    .pad.p0 { background: #2f8b6d; color: #5cd2a3; border-top-left-radius: 100% 100%; }
+    .pad.p1 { background: #a14a24; color: #ffaa3c; border-top-right-radius: 100% 100%; }
+    .pad.p2 { background: #8a5b18; color: #e5d76b; border-bottom-left-radius: 100% 100%; }
+    .pad.p3 { background: #7a2b3a; color: #ff7878; border-bottom-right-radius: 100% 100%; }
+    .simon-core {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      width: 34%; height: 34%;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--fg-dim);
+      padding: 10px;
+    }
+    .simon-core strong { display: block; font-size: 26px; color: var(--accent); line-height: 1.1; margin-bottom: 2px; }
+    .hint { font-family: var(--mono); color: var(--fg-dim); font-size: 13px; text-align: center; min-height: 1.4em; margin: 4px 0 16px; }
+    .hint.flash-err { color: var(--err); }
+    .hint.flash-ok { color: var(--accent); }
+    .simon.locked .pad { cursor: default; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="crumbs"><a href="/">/</a> / <a href="/games/">games</a> / simon</p>
+    <div class="game-head">
+      <h1><span class="accent">Simon</span> Says</h1>
+      <div class="score mono">level <strong id="level">0</strong> · best <strong id="best">0</strong></div>
+    </div>
+    <p class="controls">
+      <span>click / tap a pad - or <kbd>Q</kbd> <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd></span>
+      <span><kbd>space</kbd> - start / next</span>
+      <span><kbd>R</kbd> - restart</span>
+      <span id="sfx-slot"></span>
+    </p>
+    <p id="hint" class="hint">press space or tap the center to start</p>
+    <div class="simon-wrap">
+      <div class="simon locked" id="simon" aria-label="Simon board">
+        <div class="pad p0" data-pad="0" aria-label="Green pad"></div>
+        <div class="pad p1" data-pad="1" aria-label="Orange pad"></div>
+        <div class="pad p2" data-pad="2" aria-label="Yellow pad"></div>
+        <div class="pad p3" data-pad="3" aria-label="Red pad"></div>
+        <button id="core" class="simon-core" type="button" aria-label="Start">
+          <span><strong id="coreLvl">-</strong>start</span>
+        </button>
+      </div>
+    </div>
+  </main>
+
+<script src="/games/sfx.js"></script>
+<script>
+(function () {
+  var PAD_FREQ = [329.63, 261.63, 392.00, 195.99]; // E4, C4, G4, G3 — classic Simon
+  var LIT_MS  = 420;
+  var GAP_MS  = 180;
+
+  var best = parseInt(localStorage.getItem('simon-best') || '0', 10);
+  var seq = [];
+  var playerIdx = 0;
+  var phase = 'idle'; // idle | showing | input | over
+  var simon = document.getElementById('simon');
+  var pads = Array.prototype.slice.call(simon.querySelectorAll('.pad'));
+  var hint = document.getElementById('hint');
+  var core = document.getElementById('core');
+
+  function setHint(t, cls) {
+    hint.textContent = t;
+    hint.className = 'hint' + (cls ? ' ' + cls : '');
+  }
+  function updateHUD() {
+    document.getElementById('level').textContent = seq.length;
+    document.getElementById('best').textContent = best;
+    document.getElementById('coreLvl').textContent = seq.length || '-';
+  }
+
+  var audio = null;
+  function ensureAudio() {
+    if (SFX.isMuted()) return null;
+    if (!audio) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { audio = new AC(); } catch (e) { return null; }
+    }
+    if (audio.state === 'suspended') { try { audio.resume(); } catch (e) {} }
+    return audio;
+  }
+  function padTone(i, dur) {
+    var a = ensureAudio(); if (!a) return;
+    var o = a.createOscillator(), g = a.createGain();
+    o.type = 'sine';
+    o.frequency.value = PAD_FREQ[i];
+    g.gain.setValueAtTime(0, a.currentTime);
+    g.gain.linearRampToValueAtTime(0.18, a.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + (dur / 1000));
+    o.connect(g).connect(a.destination);
+    o.start();
+    o.stop(a.currentTime + (dur / 1000) + 0.02);
+  }
+
+  function lightPad(i, dur) {
+    return new Promise(function (resolve) {
+      padTone(i, dur);
+      pads[i].classList.add('lit');
+      setTimeout(function () {
+        pads[i].classList.remove('lit');
+        setTimeout(resolve, GAP_MS);
+      }, dur);
+    });
+  }
+
+  function showSequence() {
+    phase = 'showing';
+    simon.classList.add('locked');
+    setHint('watch…');
+    var p = Promise.resolve();
+    seq.forEach(function (s) { p = p.then(function () { return lightPad(s, LIT_MS); }); });
+    p.then(function () {
+      phase = 'input';
+      playerIdx = 0;
+      simon.classList.remove('locked');
+      setHint('your turn — ' + seq.length + ' step' + (seq.length === 1 ? '' : 's'));
+    });
+  }
+
+  function nextRound() {
+    if (phase === 'showing') return;
+    if (phase === 'over') { seq = []; }
+    seq.push(Math.floor(Math.random() * 4));
+    updateHUD();
+    setTimeout(showSequence, 350);
+  }
+
+  function restart() {
+    seq = []; playerIdx = 0; phase = 'idle';
+    simon.classList.add('locked');
+    updateHUD();
+    setHint('press space or tap the center to start');
+  }
+
+  function gameOver() {
+    phase = 'over';
+    simon.classList.add('locked');
+    SFX.crash();
+    if (seq.length - 1 > best) { best = seq.length - 1; localStorage.setItem('simon-best', String(best)); }
+    updateHUD();
+    setHint('✗ wrong — reached level ' + (seq.length) + '. press space to try again.', 'flash-err');
+  }
+
+  function press(i) {
+    if (phase !== 'input') return;
+    lightPad(i, 200);
+    var expected = seq[playerIdx];
+    if (i !== expected) { gameOver(); return; }
+    playerIdx++;
+    if (playerIdx >= seq.length) {
+      phase = 'showing';
+      simon.classList.add('locked');
+      setHint('✓ nice.', 'flash-ok');
+      setTimeout(nextRound, 650);
+    }
+  }
+
+  pads.forEach(function (el, i) {
+    el.addEventListener('pointerdown', function (e) { e.preventDefault(); press(i); });
+  });
+  core.addEventListener('click', function () {
+    if (phase === 'idle' || phase === 'over') nextRound();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    var map = { KeyQ: 0, KeyW: 1, KeyA: 2, KeyS: 3 };
+    if (e.code in map) { e.preventDefault(); press(map[e.code]); }
+    else if (e.code === 'Space') {
+      e.preventDefault();
+      if (phase === 'idle' || phase === 'over') nextRound();
+    } else if (e.code === 'KeyR') { restart(); }
+  });
+
+  restart();
+  SFX.mountToggle(document.getElementById('sfx-slot'));
+})();
+</script>
+</body>
+</html>
