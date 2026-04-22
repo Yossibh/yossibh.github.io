@@ -198,7 +198,8 @@
     .q-card {
       position: relative;
       min-height: 172px;
-      cursor: default;
+      cursor: pointer;
+      transition: opacity .22s ease, filter .22s ease;
     }
     .q-face {
       position: absolute;
@@ -320,8 +321,38 @@
        cover the terminal output. */
     .quadrant:has(.q-card:hover) .q-center,
     .quadrant:has(.q-card.open) .q-center { opacity: 0; }
+    .quadrant:has(.q-card.open) .q-edge {
+      opacity: 0;
+      transition: opacity .18s ease;
+    }
     @media (prefers-reduced-motion: reduce) {
       .q-center::after { animation: none; }
+    }
+
+    /* ── Maximize-on-hover (desktop) ─────────────────────────────────────── */
+    @media (min-width: 721px) {
+      .quadrant { display: block; min-height: 430px; }
+      .q-card {
+        position: absolute;
+        margin: 0;
+        transition:
+          inset .34s cubic-bezier(.2,.7,.2,1),
+          opacity .22s ease,
+          filter .22s ease;
+      }
+      .q-sre { inset: 36px calc(50% + 7px) calc(50% + 7px) 34px; }
+      .q-ai  { inset: 36px 34px calc(50% + 7px) calc(50% + 7px); }
+      .q-swe { inset: calc(50% + 7px) calc(50% + 7px) 36px 34px; }
+      .q-sec { inset: calc(50% + 7px) 34px 36px calc(50% + 7px); }
+      .q-card.open { inset: 36px 34px; z-index: 10; }
+      .quadrant:has(.q-card.open) .q-card:not(.open) {
+        opacity: 0.18;
+        filter: blur(2px) saturate(0.6);
+        pointer-events: none;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .q-card { transition: opacity .22s ease, filter .22s ease; }
     }
 
     @media (max-width: 720px) {
