@@ -407,6 +407,106 @@
       .q-center { display: none; }
     }
 
+    /* ── Monitor enclosure ──────────────────────────────────────────────── */
+    .monitor {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .monitor-bezel {
+      position: relative;
+      width: 100%;
+      padding: 18px 18px 34px;
+      background: linear-gradient(180deg, #1a1f26 0%, #0e1217 100%);
+      border-radius: 14px 14px 6px 6px;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        inset 0 0 0 1px #000,
+        0 0 0 2px #2a3038,
+        0 18px 40px -20px rgba(0,0,0,0.8),
+        0 2px 0 #0a0d11;
+    }
+    .monitor-bezel::before {
+      /* inner screen rim */
+      content: "";
+      position: absolute;
+      inset: 14px 14px 30px;
+      border-radius: 4px;
+      box-shadow:
+        inset 0 0 0 1px #000,
+        inset 0 0 14px rgba(92,210,163,0.08);
+      pointer-events: none;
+    }
+    .monitor-bezel::after {
+      /* subtle screen scanlines + glare */
+      content: "";
+      position: absolute;
+      inset: 14px 14px 30px;
+      border-radius: 4px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.04), transparent 18%, transparent 82%, rgba(0,0,0,0.25)),
+        repeating-linear-gradient(0deg, rgba(92,210,163,0.035) 0px, rgba(92,210,163,0.035) 1px, transparent 1px, transparent 3px);
+      pointer-events: none;
+      mix-blend-mode: screen;
+      opacity: 0.6;
+    }
+    .monitor-brand {
+      position: absolute;
+      bottom: 9px; left: 50%; transform: translateX(-50%);
+      font-size: 9px; letter-spacing: 0.35em;
+      color: #4a525c;
+      text-shadow: 0 1px 0 #000;
+    }
+    .monitor-led {
+      position: absolute;
+      bottom: 12px; right: 20px;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent), 0 0 2px var(--accent);
+      animation: monitor-led-blink 4s ease-in-out infinite;
+    }
+    @keyframes monitor-led-blink {
+      0%, 94%, 100% { opacity: 1; }
+      96%           { opacity: 0.25; }
+    }
+    .monitor-neck {
+      width: 72px; height: 26px;
+      background: linear-gradient(180deg, #20262e, #141921);
+      border-left: 1px solid #000;
+      border-right: 1px solid #000;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .monitor-base {
+      width: 220px; max-width: 60%; height: 10px;
+      background: linear-gradient(180deg, #20262e, #0c0f13);
+      border-radius: 6px 6px 3px 3px;
+      box-shadow:
+        0 1px 0 #000,
+        0 6px 14px -4px rgba(0,0,0,0.7);
+    }
+    /* The quadrant now sits inside the bezel; drop its outer border so the
+       monitor provides the frame. */
+    .monitor .quadrant {
+      margin-top: 0;
+      border: none;
+      border-radius: 3px;
+      padding: 30px 28px;
+    }
+    @media (max-width: 720px) {
+      .monitor-bezel { padding: 10px 10px 24px; border-radius: 10px 10px 4px 4px; }
+      .monitor-bezel::before, .monitor-bezel::after { inset: 8px 8px 20px; }
+      .monitor-brand { bottom: 6px; font-size: 8px; letter-spacing: 0.3em; }
+      .monitor-led { bottom: 9px; right: 12px; width: 5px; height: 5px; }
+      .monitor-neck { width: 58px; height: 20px; }
+      .monitor-base { width: 180px; }
+      .monitor .quadrant { padding: 16px 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .monitor-led { animation: none; }
+    }
+
     /* ── Track record ────────────────────────────────────────────────────── */
     .career-list { list-style: none; padding: 0; margin: 10px 0 20px; display: flex; flex-direction: column; gap: 6px; }
     .career-list li { display: grid; grid-template-columns: 110px 1fr; gap: 14px; align-items: baseline; padding: 4px 0; }
@@ -481,7 +581,11 @@
         and increasingly, in the middle.
       </p>
 
-      <div class="quadrant" role="img" aria-label="Quadrant showing the four disciplines and their intersections. Hover each card for a man-page.">
+      <div class="monitor" aria-hidden="false">
+        <div class="monitor-bezel">
+          <div class="monitor-brand mono" aria-hidden="true">YBH-4K</div>
+          <div class="monitor-led" aria-hidden="true"></div>
+        <div class="quadrant" role="img" aria-label="Quadrant showing the four disciplines and their intersections. Hover each card for a man-page.">
         <div class="q-card q-sre" data-slug="sre" tabindex="0" role="button" aria-label="SRE / platform — activate to see details">
           <div class="q-face">
             <div class="q-titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="path"><span class="prompt">$ man</span><span class="slug">~/work/</span><b>sre</b></span></div>
@@ -583,6 +687,10 @@
             <circle class="qc-dot" cx="22" cy="22" r="2" fill="currentColor"/>
           </svg>
         </span>
+        </div>
+        </div>
+        <div class="monitor-neck" aria-hidden="true"></div>
+        <div class="monitor-base" aria-hidden="true"></div>
       </div>
     </section>
 
